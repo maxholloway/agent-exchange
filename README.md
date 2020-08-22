@@ -1,4 +1,4 @@
-# exchangesim
+# agent-exchange
 
 ## Background
 Simulation is a powerful tool. In complicated environments such as financial exchanges, empirical simulations provide a risk-free way to understand an idea. In this project, we aim to make a clear interface for an exchange and its participants. Concretely, we create a standardized way to simulate the dynamics of an exchange and its participants. The primary way to use this is to do the following:

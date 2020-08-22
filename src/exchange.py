@@ -1,16 +1,15 @@
-"""
-Defines the basic structure of an exchange.
-"""
-from typing import Sequence
-from src.agent.core import Agent
 import numpy as np
+from typing import Sequence
+from src.agent import Agent
 
-class ExchangeBase:
+class Exchange:
+	"""
+	Defines the basic structure of an exchange.
+	"""
 	def __init__(self, agents: Sequence[Agent]):
 		"""Make an Exchange object.
 		"""
 		self.agents = agents
-		self.exchange_state = self.get_exchange_state()
 		self.t = 0 # tracks the time of the simulation
 		pass
 
@@ -19,6 +18,11 @@ class ExchangeBase:
 		This may involve updating an internal order book,
 		prioritizing certain agents, etc.
 		"""
+		# Code that determines a new exchange state, based
+		# on the agents' actions
+
+		# Set the exchange state variable
+		
 		raise(NotImplementedError())
 
 	def get_exchange_state(self):
@@ -46,23 +50,6 @@ class ExchangeBase:
 		"""
 		return None
 
-	def __broadcast_action_results(self):
-		"""In standard RL fashion, the agents saw a state and
-		took an action, and now we need to give them the
-		(next_state, reward, done, info) tuple.
-		
-		Note: this relies on the exchange_state already having
-		been updated in this step.
-		"""
-		exchange_state = self.get_exchange_state() # insure we get the most updated exchange state
-		for agent_index in range(len(self.agents)):
-			agent.action_results_update(
-				exchange_state,
-				self.__get_reward(agent_index),
-				self.__get_done(agent_index),
-				self.__get_info(agent_index))
-		return
-
 	def simulate_step(self):
 		"""Take a step, where the exchange gets an
 		action from each agent, handles
@@ -74,15 +61,17 @@ class ExchangeBase:
 		# Get the actions from each agent. In this simulation,
 		# we assume that agents submit their actions at the same
 		# time.
-		actions = np.array([agent.get_action(self.exchange_state) for agent in self.agents])
-
+		initial_exchange_state = self.get_exchange_state()
+		actions = np.array([agent.get_action(initial_exchange_state) for agent in self.agents])
+		
 		# Handle all of the agents' actions.
 		self.update_exchange_state(actions)
 
 		# Broadcast the action results
+		new_exchange_state = self.get_exchange_state()
 		for agent_index in range(len(self.agents)):
-			agent.action_results_update(
-				self.exchange_state,
+			self.agents[agent_index].action_results_update(
+				new_exchange_state,
 				self.__get_reward(agent_index),
 				self.__get_done(agent_index),
 				self.__get_info(agent_index))

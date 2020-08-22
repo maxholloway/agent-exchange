@@ -1,5 +1,5 @@
 class Agent:
-	def __init__(self):
+    def __init__(self):
         pass
 
     def get_action(self, exchange_state):

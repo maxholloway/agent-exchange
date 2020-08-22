@@ -1,4 +1,4 @@
 # agent
 
 ## Context
-Agents are the participants in the exchange. Here we define the interface for an agent.
+Agents are the participants in the exchange. The only hard requirement for agents is that they define a state->action function.

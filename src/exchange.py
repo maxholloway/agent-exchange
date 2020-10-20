@@ -45,10 +45,22 @@ class Exchange:
 		return False
 
 	def __get_info(self, agent_index):
-		"""Get information that is to be given to users.
-		This does not need to be implemented.
+		"""Get extra information to users. This may
+		include agent-specific state information. This
+        implementation allows us to avoid cluttering
+        the output of `get_exchange_state` with
+        agend-dependent state changes (e.g. D.E. Shaw
+        should see the same results from `get_exchange_state`
+        as Citadel).
 		"""
 		return None
+
+	def on_step_end(self):
+		"""Function invoked at the end of each step.
+		This allows for intra-step state cleanup. In
+		many cases this will not be necessary to implement.
+		"""
+		pass
 
 	def simulate_step(self):
 		"""Take a step, where the exchange gets an
@@ -78,6 +90,10 @@ class Exchange:
 
 		# Increment the internal timer
 		self.t += 1
+
+		# Allow for cleanup after the step is complete
+		self.on_step_end()
+
 		return
 
 	def simulate_steps(self, n):

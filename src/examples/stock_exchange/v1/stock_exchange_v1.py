@@ -299,10 +299,12 @@ class StockExchangeV1OrderBook:
         TODO: unit tests
         """
         shares_filled = 0
-        # print(f"Order size: {order.order_size}")
+
         if order.order_size > 0:
             # Fill all of the shares that we can
             ask_prices = self.asks.index
+
+            order_volume = order.order_size
 
             if order.order_type == StockExchangeV1OrderTypes.MARKET:
                 limit_price = float('inf')
@@ -315,7 +317,7 @@ class StockExchangeV1OrderBook:
             ask_fill_max_index = ask_prices.searchsorted(limit_price, "right") # index where we can no longer keep filling
             for fill_index in range(ask_fill_max_index):
                 fill_price = ask_prices[fill_index]
-                unfilled_shares = order.order_size-shares_filled
+                unfilled_shares = order_volume - shares_filled
                 shares_filled += self.__take_liquidity(
                     StockExchangeV1OrderBookSides.ASKS, # we're market-buying, so we take liquidity from the ask book side
                     agent_index, 
@@ -325,7 +327,7 @@ class StockExchangeV1OrderBook:
 
             # Place the unfilled shares on the bids book (only if it's a limit order)
             if order.order_type == StockExchangeV1OrderTypes.LIMIT:
-                unfilled_shares = order.order_size - shares_filled
+                unfilled_shares = order_volume - shares_filled
                 self.__make_liquidity(
                     StockExchangeV1OrderBookSides.BIDS, 
                     agent_index, 
@@ -336,6 +338,8 @@ class StockExchangeV1OrderBook:
             # Fill all of the shares that we can on the bids book
             bid_prices = self.bids.index
 
+            order_volume = -order.order_size
+
             if order.order_type == StockExchangeV1OrderTypes.MARKET:
                 limit_price = 0 # sell as low as the book goes, but if the book is depleted, stop selling
             elif order.order_type == StockExchangeV1OrderTypes.LIMIT:
@@ -343,10 +347,10 @@ class StockExchangeV1OrderBook:
             else:
                 raise(Exception(f'Invalid order type "{order.order_type}"'))
             
-            bid_fill_min_index = bid_prices.searchsorted(order.limit_price, "left")
+            bid_fill_min_index = bid_prices.searchsorted(limit_price, "left")
             for fill_index in range(len(bid_prices)-1, bid_fill_min_index-1, -1):
                 fill_price = bid_prices[fill_index]
-                unfilled_shares = order.order_size-shares_filled
+                unfilled_shares = order_volume-shares_filled
                 shares_filled += self.__take_liquidity(
                     StockExchangeV1OrderBookSides.BIDS, 
                     agent_index, 
@@ -356,7 +360,7 @@ class StockExchangeV1OrderBook:
 
             # Place the unfilled shares on the asks book (only if it's a limit order)
             if order.order_type == StockExchangeV1OrderTypes.LIMIT:
-                unfilled_shares = order.order_size - shares_filled
+                unfilled_shares = order_volume - shares_filled
                 self.__make_liquidity(
                     StockExchangeV1OrderBookSides.ASKS,
                     agent_index,
@@ -407,6 +411,7 @@ class StockExchangeV1(Exchange):
         order_fills_this_step
         """
         self.order_fills_this_step = {}
+        # print(self.order_book)
         # print("======== Ending Step ========\n\n\n\n\n")
         return
 
@@ -532,8 +537,6 @@ class StockAgentV1NaiveMaker(StockAgentV1):
 
             order = StockExchangeV1Action(StockExchangeV1OrderTypes.LIMIT, buy_amount, buy_price)
 
-            # print(f"Placing a buy order: {order}")
-
             return order
         else: # sell just under current ask
             sell_price = order_book.get_ask() - 0.01
@@ -542,8 +545,6 @@ class StockAgentV1NaiveMaker(StockAgentV1):
             sell_amount = randint(0, 1000)
 
             order = StockExchangeV1Action(StockExchangeV1OrderTypes.LIMIT, -sell_amount, sell_price)
-
-            # print(f"Placing a sell order: {order}")
 
             return order
 
@@ -564,7 +565,7 @@ class StockAgentV1NaiveTaker(StockAgentV1):
         super().__init__(initial_num_shares, initial_capital)
 
     def get_action(self, order_book: StockExchangeV1OrderBook):
-        if random() < .3: # buy
+        if random() < .5: # buy
             expected_buy_price = order_book.get_ask()
             
             # Randomly decide on how much to buy
@@ -580,15 +581,16 @@ class StockAgentV1NaiveTaker(StockAgentV1):
             max_sell_amount = self.internal_state.num_shares
             num_shares_to_sell = randint(0, max_sell_amount)
 
-            return StockExchangeV1Action(StockExchangeV1OrderTypes.MARKET, num_shares_to_sell)
+            return StockExchangeV1Action(StockExchangeV1OrderTypes.MARKET, -num_shares_to_sell)
 
 
 if __name__ == '__main__':
-    agents = [StockAgentV1NaiveMaker() for _ in range(10)]
-    agents += [StockAgentV1NaiveTaker() for _ in range(10)]
+    NMAKER, NTAKER, NSTEPS = 10, 0, 7
+    agents = [StockAgentV1NaiveMaker() for _ in range(NMAKER)]
+    agents += [StockAgentV1NaiveTaker() for _ in range(NTAKER)]
     exchange = StockExchangeV1(agents)
     
-    exchange.simulate_steps(10)
+    exchange.simulate_steps(NSTEPS)
     print(exchange.order_book)
 
 

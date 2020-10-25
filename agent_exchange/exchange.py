@@ -30,13 +30,13 @@ class Exchange:
 		"""
 		raise(NotImplementedError())
 
-	def __get_reward(self, agent_index):
+	def get_reward(self, agent_index):
 		"""Get the reward that an agent
 		receives after taking their action.
 		"""
 		return 0
 
-	def __get_done(self, agent_index):
+	def get_done(self, agent_index):
 		"""Get info on whether or not an
 		agent is done. By default, there
 		is no terminal state for agents 
@@ -84,9 +84,9 @@ class Exchange:
 		for agent_index in range(len(self.agents)):
 			self.agents[agent_index].action_results_update(
 				new_exchange_state,
-				self.__get_reward(agent_index),
-				self.__get_done(agent_index),
-				self.__get_info(agent_index))
+				self.get_reward(agent_index),
+				self.get_done(agent_index),
+				self.get_info(agent_index))
 
 		# Increment the internal timer
 		self.t += 1
@@ -94,12 +94,8 @@ class Exchange:
 		# Allow for cleanup after the step is complete
 		self.on_step_end()
 
-		return
-
 	def simulate_steps(self, n):
 		"""Simulate multiple steps of an exchange.
 		"""
 		for i in range(n):
 			self.simulate_step()
-		return
-

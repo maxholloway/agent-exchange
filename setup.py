@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="agent-exchange", # Replace with your own username
-    version="0.0.2",
+    version="0.0.3",
     author="Max Holloway",
     author_email="maxwellpearmanholloway@gmail.com",
     description="Tool to simulate multi-agent interactions in competitive environments",

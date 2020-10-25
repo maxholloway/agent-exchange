@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Sequence
-from src.agent import Agent
+from agent_exchange.agent import Agent
 
 class Exchange:
 	"""
@@ -44,8 +44,8 @@ class Exchange:
 		"""
 		return False
 
-	def __get_info(self, agent_index):
-		"""Get extra information to users. This may
+	def get_info(self, agent_index):
+		"""Get extra information to agents. This may
 		include agent-specific state information. This
         implementation allows us to avoid cluttering
         the output of `get_exchange_state` with

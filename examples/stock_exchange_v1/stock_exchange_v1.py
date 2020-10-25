@@ -1,44 +1,11 @@
-"""Stock exchange simulator for a single stock.
-We define the stock exchange environment here
-with the following specification:
-    1. The state of the exchange is
-    given by an entire order book.
-    2. Agents are placed arbitrarily
-    into the order book. When an agent
-    places bid at the same price as
-    another agent, the order of fill is
-    undefined behavior.
-    3. Agents' action space just comprises
-    of the expressivity of an order object.
-    An order object can be a market or a
-    limit order.
-
-This exchange will still have the following
-limitations:
-    1. All agents get to view the order
-       book at the same time, and all
-       agents have arbitrary priority
-       in the order book; this neglects
-       the existence of HFTs       
-    2. There's only a single stock traded.
-    3. Scalability. The order book could
-       become quite large in real life, 
-       and we won't be able to do scale well
-       with a huge order book here.
-    4. No spreads or transaction costs.
-    5. Naive cold starting. We cold start with
-       an empty order book, which may or may
-       not affect agents' policies. When getting
-       a bid or an ask quote from the empty order
-       book, we return a fall-back default bid
-       or ask.
-"""
 from random import shuffle, random, randint
+from typing import Sequence, Tuple, Dict, Union
+
 import numpy as np
 import pandas as pd
-from src.agent import Agent
-from src.exchange import Exchange
-from typing import Sequence, Tuple, Dict, Union
+
+from agent_exchange.agent import Agent
+from agent_exchange.exchange import Exchange
 
 def dict_repr(self):
     return self.__dict__.__repr__()
@@ -46,7 +13,7 @@ def dict_repr(self):
 def dict_str(self):
     return self.__dict__.__str__()
 
-
+# Make stock exchange
 class StockExchangeV1OrderTypes:
     MARKET="MARKET"
     LIMIT="LIMIT"
@@ -397,7 +364,7 @@ class StockExchangeV1(Exchange):
         """
         return self.order_book
 
-    def __get_info(self, agent_index):
+    def get_info(self, agent_index):
         """Relay information about how many shares 
         of the user's previous orders filled.
         """
@@ -431,186 +398,3 @@ class StockExchangeV1(Exchange):
             self.order_book.update_with_order(agent_index, order, self.order_fills_this_step)
         
         return
-    
-
-class StockAgentV1InternalState:
-    def __init__(self, initial_num_shares: int, initial_capital: float):
-        self.num_shares = initial_num_shares
-        self.capital = initial_capital
-        
-        # Mappings from price to number of shares
-        self.open_bids = {}
-        self.open_asks = {}
-
-    def update_with_fill_ticket(self, ticket: StockExchangeV1FillTicket):
-        """Use the fill ticket to update our state variables.
-        """
-
-        # Add new bids
-        for price in ticket.open_bids:
-            StockAgentV1InternalState.increment_or_create(self.open_bids, price, ticket.open_bids[price])
-
-        # Add new asks
-        for price in ticket.open_asks:
-            StockAgentV1InternalState.increment_or_create(self.open_asks, price, ticket.open_asks[price])
-
-        # Remove old bids that were filled in the past time step
-        for price in ticket.closed_bids:
-            shares_bought = ticket.closed_bids[price]
-            self.num_shares += shares_bought
-            self.capital -= price * shares_bought
-            StockAgentV1InternalState.decrement_and_try_delete(self.open_bids, price, shares_bought)
-            
-
-        # Remove old asks that were filled in the past time step
-        for price in ticket.closed_asks:
-            shares_sold = ticket.closed_asks[price]
-            self.num_shares -= shares_sold
-            self.capital += price * shares_sold
-            StockAgentV1InternalState.decrement_and_try_delete(self.open_asks, price, shares_sold)
-
-    def get_capital(self):
-        return self.capital
-
-    def get_num_shares(self):
-        return self.num_shares
-    
-    def __repr__(self):
-        return dict_repr(self)
-
-    def __str__(self):
-        return dict_str(self)
-
-    def increment_or_create(D, key, value):
-        """If the key-value pair does not exist yet,
-        then add a new key-value pair with `value`
-        as the value. Otherwise, increment the
-        key's value with `value`.
-        """
-        if key not in D:
-            D[key] = 0
-        D[key] += value
-
-    def decrement_and_try_delete(D, key, value):
-        """Decrement a value in a dictionary,
-        and if the new value is 0, then delete
-        the k-v pair from the dictionary.
-        """
-        D[key] -= value
-        if D[key] == 0:
-            del D[key]
-
-
-class StockAgentV1(Agent):
-    def __init__(self, initial_num_shares, initial_capital):
-        super().__init__()
-        self.internal_state = StockAgentV1InternalState(initial_num_shares, initial_capital)
-
-    def action_results_update(
-        self, 
-        new_order_book: StockExchangeV1OrderBook, 
-        reward, 
-        done: bool, 
-        fill_ticket: Union[type(None), StockExchangeV1FillTicket]):
-        
-        if fill_ticket != None:
-            self.internal_state.update_with_fill_ticket(fill_ticket)
-
-    def __repr__(self):
-        return dict_repr(self)
-
-    def __str__(self):
-        return dict_str(self)
-
-    
-class StockAgentV1NaiveMaker(StockAgentV1):
-    """Naive agent that acts as a market maker.
-    If there is a spread, this agent will place
-    an order on the buy side 1/2 of the time, on
-    the sell side 1/2 of the time.
-
-    Note: in V1, there is no way to place multiple
-    orders within the same time step.
-    """
-    def __init__(self, initial_num_shares=1000, initial_capital=100000):
-        super().__init__(initial_num_shares, initial_capital)
-
-    def get_action(self, order_book: StockExchangeV1OrderBook):
-        if random() < .5: # buy just over current bid
-            buy_price = order_book.get_bid() + 0.01 # penny-up on the market-clearing buy price
-            
-            # Randomly buy as little as 0 or as much as we can
-            buy_amount = randint(0, 1000) # limit buy
-
-            order = StockExchangeV1Action(StockExchangeV1OrderTypes.LIMIT, buy_amount, buy_price)
-
-            return order
-        else: # sell just under current ask
-            sell_price = order_book.get_ask() - 0.01
-
-            # Randomly sell as little as 0 and as much as 10
-            sell_amount = randint(0, 1000)
-
-            order = StockExchangeV1Action(StockExchangeV1OrderTypes.LIMIT, -sell_amount, sell_price)
-
-            return order
-
-
-class StockAgentV1NaiveTaker(StockAgentV1):
-    """Naive agent that acts as a liquidity
-    taker. This agent speculates by placing
-    market orders of buy 1/2 of the time and
-    sell 1/2 of the time. Here we ignore
-    constraints on short selling, allowing
-    agents to shorts sell without limit.
-
-    Also, if the taker's order exhausts the
-    order book, then only the portion of their
-    order in the order book gets filled.
-    """
-    def __init__(self, initial_num_shares=1000, initial_capital=100000):
-        super().__init__(initial_num_shares, initial_capital)
-
-    def get_action(self, order_book: StockExchangeV1OrderBook):
-        if random() < .5: # buy
-            expected_buy_price = order_book.get_ask()
-            
-            # Randomly decide on how much to buy
-            max_buy_amount = self.internal_state.capital // expected_buy_price
-            num_shares_to_buy = randint(0, max_buy_amount)
-
-            return StockExchangeV1Action(StockExchangeV1OrderTypes.MARKET, num_shares_to_buy)
-
-        else:
-            expected_sell_price = order_book.get_bid()
-
-            # Randomly decide on how much to sell
-            max_sell_amount = self.internal_state.num_shares
-            num_shares_to_sell = randint(0, max_sell_amount)
-
-            return StockExchangeV1Action(StockExchangeV1OrderTypes.MARKET, -num_shares_to_sell)
-
-
-if __name__ == '__main__':
-    NMAKER, NTAKER, NSTEPS = 10, 0, 7
-    agents = [StockAgentV1NaiveMaker() for _ in range(NMAKER)]
-    agents += [StockAgentV1NaiveTaker() for _ in range(NTAKER)]
-    exchange = StockExchangeV1(agents)
-    
-    exchange.simulate_steps(NSTEPS)
-    print(exchange.order_book)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

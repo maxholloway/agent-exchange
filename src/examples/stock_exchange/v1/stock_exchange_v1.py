@@ -78,12 +78,12 @@ class StockExchangeV1FillTicket:
     """
     def __init__(self):
         # Old bids/asks that were filled
-        self.closed_bids = {}
-        self.closed_asks = {}
+        self.closed_bids: Dict[float, int] = {}
+        self.closed_asks: Dict[float, int] = {}
 
         # New bids/asks that were opened
-        self.open_bids = {}
-        self.open_asks = {}
+        self.open_bids: Dict[float, int] = {}
+        self.open_asks: Dict[float, int] = {}
 
     def __price_to_quantity_helper(self, member, price, quantity):
         """Increments quantity for a price for a data
@@ -433,25 +433,6 @@ class StockExchangeV1(Exchange):
         return
     
 
-def increment_or_create(D, key, value):
-    """If the key-value pair does not exist yet,
-    then add a new key-value pair with `value`
-    as the value. Otherwise, increment the
-    key's value with `value`.
-    """
-    if k not in D:
-        D[k] = 0
-    D[k] += v
-
-def decrement_and_try_delete(D, key, value):
-    """Decrement a value in a dictionary,
-    and if the new value is 0, then delete
-    the k-v pair from the dictionary.
-    """
-    D[key] -= value
-    if D[key] == 0:
-        del D[key]
-
 class StockAgentV1InternalState:
     def __init__(self, initial_num_shares: int, initial_capital: float):
         self.num_shares = initial_num_shares
@@ -467,31 +448,57 @@ class StockAgentV1InternalState:
 
         # Add new bids
         for price in ticket.open_bids:
-            increment_or_create(self.open_bids, price, ticket.open_bids[price])
+            StockAgentV1InternalState.increment_or_create(self.open_bids, price, ticket.open_bids[price])
 
         # Add new asks
         for price in ticket.open_asks:
-            increment_or_create(self.open_asks, price, ticket.open_asks[price])
+            StockAgentV1InternalState.increment_or_create(self.open_asks, price, ticket.open_asks[price])
 
         # Remove old bids that were filled in the past time step
         for price in ticket.closed_bids:
             shares_bought = ticket.closed_bids[price]
             self.num_shares += shares_bought
             self.capital -= price * shares_bought
-            decrement_and_try_delete(self.open_bids, price, shares_bought)
+            StockAgentV1InternalState.decrement_and_try_delete(self.open_bids, price, shares_bought)
+            
 
         # Remove old asks that were filled in the past time step
         for price in ticket.closed_asks:
             shares_sold = ticket.closed_asks[price]
             self.num_shares -= shares_sold
             self.capital += price * shares_sold
-            decrement_and_try_delete(self.open_asks, price, shares_sold)
+            StockAgentV1InternalState.decrement_and_try_delete(self.open_asks, price, shares_sold)
 
+    def get_capital(self):
+        return self.capital
+
+    def get_num_shares(self):
+        return self.num_shares
+    
     def __repr__(self):
         return dict_repr(self)
 
     def __str__(self):
         return dict_str(self)
+
+    def increment_or_create(D, key, value):
+        """If the key-value pair does not exist yet,
+        then add a new key-value pair with `value`
+        as the value. Otherwise, increment the
+        key's value with `value`.
+        """
+        if key not in D:
+            D[key] = 0
+        D[key] += value
+
+    def decrement_and_try_delete(D, key, value):
+        """Decrement a value in a dictionary,
+        and if the new value is 0, then delete
+        the k-v pair from the dictionary.
+        """
+        D[key] -= value
+        if D[key] == 0:
+            del D[key]
 
 
 class StockAgentV1(Agent):

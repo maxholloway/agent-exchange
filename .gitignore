@@ -1,5 +1,6 @@
-
 # Development state trackers
 venv
 agent-exchange.sublime-*
 __pycache__
+.vscode
+.ipynb_checkpoints

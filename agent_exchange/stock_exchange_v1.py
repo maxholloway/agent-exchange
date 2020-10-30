@@ -590,7 +590,7 @@ if __name__ == "__main__":
     exchange = StockExchangeV1(agents)
 
     exchange.simulate_steps(NSTEPS)
-    # print(exchange.order_book)
+    print(exchange.order_book)
 
 
 

@@ -55,6 +55,12 @@ class Exchange:
 		"""
 		return None
 
+	def on_step_begin(self):
+		"""Function invoked at the beginning of each step.
+		In many cases this will not be necessary to implement.
+		"""
+		pass
+	
 	def on_step_end(self):
 		"""Function invoked at the end of each step.
 		This allows for intra-step state cleanup. In
@@ -73,6 +79,7 @@ class Exchange:
 		# Get the actions from each agent. In this simulation,
 		# we assume that agents submit their actions at the same
 		# time.
+		self.on_step_begin()
 		initial_exchange_state = self.get_exchange_state()
 		actions = np.array([agent.get_action(initial_exchange_state) for agent in self.agents])
 		

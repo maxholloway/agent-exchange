@@ -40,5 +40,12 @@ An agent is a participant in an exchange. There may be more than one agent parti
 ### Project organization
 All of the interface logic lives in the files `/agent_exchange/exchange.py` and `/agent_exchange/agent.py`.
 
+## Learning
+Examples are a straightforward way to learn mosts tools, and this tool is no exception. The `/examples/` directory contains some example implementations of the `agent-exchange` interface. The jupyter notebooks are meant to help provide inspiration for you to develop your own agent and exchange problems.
+
 ## Contributing
-The interface should not change much over time, however it's always good to have more examples! If you are interested in modeling agent and exchange interactions using this tool, feel free to open a PR to add a simplified version of your use case into `/examples/`!
+The interface should not change much over time, however it's always good to have more examples! If you are interested in modeling agent and exchange interactions using this tool, feel free to open a PR to add a simplified version of your use case into `/examples/`! Here are the guidelines for adding an example:
+> 1. Create a subdirectory under `/examples/` for your example
+> 2. Implement the Agent and Exchange interfaces in a `.py` file
+> 3. Create a *running* jupyter notebook with all proper installations
+

@@ -4,3 +4,7 @@ agent-exchange.sublime-*
 __pycache__
 .vscode
 .ipynb_checkpoints
+
+# ignore packaging
+dist
+*.egg-info/

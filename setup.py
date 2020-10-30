@@ -1,8 +1,13 @@
+import os
 import setuptools
+
+BASE_PATH = os.path.dirname(__file__)
+with open(os.path.join(BASE_PATH, 'VERSION'), 'r') as version_file:
+    VERSION = version_file.read().strip()
 
 setuptools.setup(
     name="agent-exchange", # Replace with your own username
-    version="0.0.5",
+    version=VERSION,
     author="Max Holloway",
     author_email="maxwellpearmanholloway@gmail.com",
     description="Tool to simulate multi-agent interactions in competitive environments",

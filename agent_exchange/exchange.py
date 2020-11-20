@@ -26,7 +26,7 @@ class Exchange:
 		raise(NotImplementedError())
 
 	def get_exchange_state(self):
-		"""Encodes the state of the exchange. This 
+		"""Encodes the state of the exchange. 
 		"""
 		raise(NotImplementedError())
 
@@ -49,7 +49,7 @@ class Exchange:
 		include agent-specific state information. This
         implementation allows us to avoid cluttering
         the output of `get_exchange_state` with
-        agend-dependent state changes (e.g. D.E. Shaw
+        agent-dependent state changes (e.g. D.E. Shaw
         should see the same results from `get_exchange_state`
         as Citadel).
 		"""

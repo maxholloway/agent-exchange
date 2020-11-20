@@ -116,6 +116,12 @@ class StockAgentV1(Agent):
         fill_ticket: Union[type(None), StockExchangeV1FillTicket]):
         
         self.internal_state.on_timestep_passed(fill_ticket)
+
+    def get_num_shares(self):
+        return self.internal_state.get_num_shares()
+    
+    def get_capital(self):
+        return self.internal_state.get_capital()
         
     def __repr__(self):
         return dict_repr(self)

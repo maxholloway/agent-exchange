@@ -16,10 +16,10 @@ Simulation is a powerful tool. In complicated environments such as financial exc
 
 ## Usage
 The following steps are the recommended workflow for using this project.
-> 1. Implement an `Agent` class (or multiple!)
-> 2. Instantiate multiple `Agent`s, either of the same class or of separate ones (all with the same interface)
-> 3. Instantiate an `Exchange` object with all of the agent objects
-> 4. Call `simulate_steps(n)`, where `n` is the number of steps you'd like to simulate
+1. Implement an `Agent` class (or multiple!)
+2. Instantiate multiple `Agent`s, either of the same class or of separate ones (all with the same interface)
+3. Instantiate an `Exchange` object with all of the agent objects
+4. Call `simulate_steps(n)`, where `n` is the number of steps you'd like to simulate
 
 Afterwards, you can look at your `Agent`s to view their state at the end of the simulation. Moreover, you can define the `Agent` class such that it stores all of its previous state, which would allow you to view the agent's entire history.
 
@@ -45,7 +45,7 @@ Examples are a straightforward way to learn mosts tools, and this tool is no exc
 
 ## Contributing
 The interface should not change much over time, however it's always good to have more examples! If you are interested in modeling agent and exchange interactions using this tool, feel free to open a PR to add a simplified version of your use case into `/examples/`! Here are the guidelines for adding an example:
-> 1. Create a subdirectory under `/examples/` for your example
-> 2. Implement the Agent and Exchange interfaces in a `.py` file
-> 3. Create a *running* jupyter notebook with all proper installations
+1. Create a subdirectory under `/examples/` for your example
+2. Implement the Agent and Exchange interfaces in a `.py` file
+3. Create a *running* jupyter notebook with all proper installations
 
